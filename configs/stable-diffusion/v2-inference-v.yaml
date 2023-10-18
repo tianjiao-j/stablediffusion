@@ -10,7 +10,7 @@ model:
     timesteps: 1000
     first_stage_key: "jpg"
     cond_stage_key: "txt"
-    image_size: 16   # original: 64
+    image_size: 64   # 64
     channels: 4
     cond_stage_trainable: false
     conditioning_key: crossattn
@@ -30,11 +30,11 @@ model:
         attention_resolutions: [ 4, 2, 1 ]
         num_res_blocks: 2
         channel_mult: [ 1, 2, 4, 4 ]
-        num_head_channels: 16 # original: 64 need to fix for flash-attn
+        num_head_channels: 64   # 64; need to fix for flash-attn
         use_spatial_transformer: True
         use_linear_in_transformer: True
         transformer_depth: 1
-        context_dim: 128 # original: 1024
+        context_dim: 1024   # 1024
         legacy: False
 
     first_stage_config:
@@ -46,7 +46,7 @@ model:
           #attn_type: "vanilla-xformers"
           double_z: true
           z_channels: 4
-          resolution: 16 # original: 256
+          resolution: 256   # 256
           in_channels: 3
           out_ch: 3
           ch: 128
