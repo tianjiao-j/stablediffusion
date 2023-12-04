@@ -1,0 +1,15 @@
+pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu116
+
+streamlit run scripts/streamlit/inpainting.py -- configs/stable-diffusion/v2-inpainting-inference.yaml checkpoints/512-inpainting-ema.ckpt
+python scripts/gradio/inpainting.py configs/stable-diffusion/v2-inpainting-inference.yaml checkpoints/512-inpainting-ema.ckpt
+
+streamlit run scripts/streamlit/superresolution.py -- configs/stable-diffusion/x4-upscaling.yaml checkpoints/x4-upscaler-ema.ckpt
+python scripts/gradio/superresolution.py configs/stable-diffusion/x4-upscaling.yaml checkpoints/x4-upscaler-ema.ckpt
+
+python scripts/img2img.py --prompt "A fantasy landscape, trending on artstation" --init-img assets/stable-samples/img2img/sketch-mountains-input.jpg --strength 0.8 --ckpt checkpoints/v2-1_512-ema-pruned.ckpt
+
+streamlit run scripts/streamlit/depth2img.py configs/stable-diffusion/v2-midas-inference.yaml checkpoints/512-depth-ema.ckpt
+python scripts/gradio/depth2img.py configs/stable-diffusion/v2-midas-inference.yaml checkpoints/512-depth-ema.ckpt
+
+python scripts/txt2img.py --prompt "a cat" --ckpt checkpoints/v2-1_512-ema-pruned.ckpt --config configs/stable-diffusion/v2-inference.yaml  --device cuda
+python scripts/txt2img.py --prompt "a cat" --ckpt checkpoints/v2-1_768-ema-pruned.ckpt --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768 --device cuda
