@@ -801,7 +801,7 @@ class UNetModel(nn.Module):
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb, context)
         h = h.type(x.dtype)
-        if self.predict_codebook_ids:
+        if self.predict_codebook_ids:   # false
             return self.id_predictor(h)
         else:
-            return self.out(h)
+            return self.out(h)  # noise
