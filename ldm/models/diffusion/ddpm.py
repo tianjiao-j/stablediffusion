@@ -619,14 +619,14 @@ class LatentDiffusion(DDPM):
 
     def instantiate_cond_stage(self, config):
         if not self.cond_stage_trainable:
-            if config == "__is_first_stage__":
+            if config == "__is_first_stage__":  # false
                 print("Using first stage also as cond stage.")
                 self.cond_stage_model = self.first_stage_model
-            elif config == "__is_unconditional__":
+            elif config == "__is_unconditional__":  # false
                 print(f"Training {self.__class__.__name__} as an unconditional model.")
                 self.cond_stage_model = None
                 # self.be_unconditional = True
-            else:
+            else:   # FrozenOpenCLIPEmbedder
                 model = instantiate_from_config(config)
                 self.cond_stage_model = model.eval()
                 self.cond_stage_model.train = disabled_train
@@ -816,7 +816,7 @@ class LatentDiffusion(DDPM):
 
     @torch.no_grad()
     def decode_first_stage(self, z, predict_cids=False, force_not_quantize=False):
-        if predict_cids:
+        if predict_cids:  # false
             if z.dim() == 4:
                 z = torch.argmax(z.exp(), dim=1).long()
             z = self.first_stage_model.quantize.get_codebook_entry(z, shape=None)

@@ -12,6 +12,7 @@ from pytorch_lightning import seed_everything
 from torch import autocast
 from contextlib import nullcontext
 from imwatermark import WatermarkEncoder
+import sys
 
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
@@ -51,7 +52,7 @@ def load_model_from_config(config, ckpt, device=torch.device("cuda"), verbose=Fa
     return model
 
 
-def parse_args():
+def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--prompt",
@@ -199,7 +200,7 @@ def parse_args():
         action='store_true',
         help="Use bfloat16",
     )
-    opt = parser.parse_args()
+    opt = parser.parse_args(args)
     return opt
 
 
@@ -223,7 +224,7 @@ def main(opt):
     elif opt.dpm:
         sampler = DPMSolverSampler(model, device=device)
     else:
-        sampler = DDIMSampler(model, device=device)
+        sampler = DDIMSampler(model, device=device)  # default
 
     os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
@@ -257,7 +258,7 @@ def main(opt):
     if opt.fixed_code:
         start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
-    if opt.torchscript or opt.ipex:
+    if opt.torchscript or opt.ipex:   # false by default
         transformer = model.cond_stage_model.model
         unet = model.model.diffusion_model
         decoder = model.first_stage_model.decoder
@@ -309,7 +310,7 @@ def main(opt):
         prompts = data[0]
         print("Running a forward pass to initialize optimizations")
         uc = None
-        if opt.scale != 1.0:
+        if opt.scale != 1.0:  # for cfg
             uc = model.get_learned_conditioning(batch_size * [""])
         if isinstance(prompts, tuple):
             prompts = list(prompts)
@@ -342,8 +343,8 @@ def main(opt):
                         uc = model.get_learned_conditioning(batch_size * [""])
                     if isinstance(prompts, tuple):
                         prompts = list(prompts)
-                    c = model.get_learned_conditioning(prompts)
-                    shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
+                    c = model.get_learned_conditioning(prompts)  # text embedding
+                    shape = [opt.C, opt.H // opt.f, opt.W // opt.f]   # default 4 channels
                     samples, _ = sampler.sample(S=opt.steps,
                                                      conditioning=c,
                                                      batch_size=opt.n_samples,
@@ -352,9 +353,9 @@ def main(opt):
                                                      unconditional_guidance_scale=opt.scale,
                                                      unconditional_conditioning=uc,
                                                      eta=opt.ddim_eta,
-                                                     x_T=start_code)
+                                                     x_T=start_code)   # default: standard gaussian
 
-                    x_samples = model.decode_first_stage(samples)
+                    x_samples = model.decode_first_stage(samples)  # decode
                     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
                     for x_sample in x_samples:
@@ -384,5 +385,10 @@ def main(opt):
 
 
 if __name__ == "__main__":
-    opt = parse_args()
+    sys.argv = ('--ckpt ../checkpoints/v2-1_768-ema-pruned.ckpt '
+                '--outdir /home/tianjiao/PycharmProjects/stablediffusion/test/txt2img-samples '
+                '--config ../configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768 --device cuda').split()
+    sys.argv.append('--prompt')
+    sys.argv.append('dogs fighting')
+    opt = parse_args(sys.argv)
     main(opt)
